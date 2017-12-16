@@ -96,6 +96,7 @@ pub type TyMap = Arc<TyMapMut>;
 pub type TyMapMut = fnv::FnvHashMap<TypeId, Ty>;
 
 pub enum Value<'a> {
+    Nil,
     Tuple(Vec<Value<'a>>),
     Bool(bool),
     Int(u64),
@@ -111,6 +112,7 @@ pub enum Value<'a> {
 impl<'a> fmt::Debug for Value<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
+            Value::Nil => f.debug_tuple("Nil").finish(),
             Value::Tuple(ref v) => f.debug_tuple("Tuple").field(v).finish(),
             Value::Bool(ref b) => f.debug_tuple("Bool").field(b).finish(),
             Value::Int(ref i) => f.debug_tuple("Int").field(i).finish(),

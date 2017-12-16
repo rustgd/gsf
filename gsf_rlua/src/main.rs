@@ -87,7 +87,7 @@ fn run() -> rlua::Result<()> {
     let context = rlua::Lua::new();
     register(&context)?;
 
-    context.eval::<()>(r#"print(Nobody.new():getSquare())"#, None)?;
+    context.eval::<()>(r#"print("square:", Nobody.new():getSquare())"#, None)?;
 
     Ok(())
 }

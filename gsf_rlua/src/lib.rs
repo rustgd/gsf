@@ -36,7 +36,7 @@ fn gsf_to_lua<'l>(
 ) -> rlua::Result<rlua::Value<'l>> {
     let res = match val {
         gsf::Value::String(s) => rlua::Value::String(lua.create_string(&s)?),
-        gsf::Value::Tuple(ref v) if v.is_empty() => rlua::Value::Nil,
+        gsf::Value::Nil => rlua::Value::Nil,
         gsf::Value::Custom(b) => {
             let id = gsf::Any::type_id(b.as_ref());
             let ty = map.get(&id).ok_or(rlua::Error::ToLuaConversionError {

@@ -18,7 +18,7 @@ where
             .map(ToOwned::to_owned)
             .map(Into::into)
             .map(gsf::Value::String)?),
-        rlua::Value::Nil => f(gsf::Value::Tuple(Default::default())),
+        rlua::Value::Nil => f(gsf::Value::Nil),
         rlua::Value::UserData(a) => {
             let ud = a.borrow::<LuaUd>()?;
 
