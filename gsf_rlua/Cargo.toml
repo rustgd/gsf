@@ -1,0 +1,8 @@
+[package]
+name = "gsf_rlua"
+version = "0.1.0"
+authors = ["torkleyy <torkleyy@gmail.com>"]
+
+[dependencies]
+gsf =  { path = "../" }
+rlua = { git = "https://github.com/rustgd/rlua" }
