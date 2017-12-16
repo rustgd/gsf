@@ -3,8 +3,7 @@
 extern crate gsf;
 extern crate rlua;
 
-use std::any::TypeId;
-use std::sync::Arc;
+mod util;
 
 struct LuaUd(Box<gsf::Any>);
 
@@ -18,14 +17,18 @@ impl<'a, 'lua> rlua::ToLua<'lua> for LuaFunc<'a> {
         let map = self.1;
 
         Ok(rlua::Value::Function(lua.create_function(
-            move |lua, val: rlua::MultiValue| {
-                println!("val: {:?}", val);
-
-                let val = func(gsf::Value::Tuple(Default::default()));
-                gsf_to_lua(lua, val, &map)
-            },
+            move |lua, val: rlua::MultiValue| lua_func(func, lua, &map, val),
         ).unwrap()))
     }
+}
+
+fn lua_func<'l>(
+    fptr: fn(gsf::Value) -> gsf::Value<'static>,
+    lua: &'l rlua::Lua,
+    map: &gsf::TyMap,
+    val: rlua::MultiValue<'l>,
+) -> rlua::Result<rlua::Value<'l>> {
+    lua_to_gsf_multi(val, |args| gsf_to_lua(lua, fptr(args), &map))
 }
 
 fn gsf_to_lua<'l>(
@@ -50,7 +53,18 @@ fn gsf_to_lua<'l>(
                 to_methods(lua, &methods, map),
             )?)
         }
+        gsf::Value::Array(a) => {
+            let table = lua.create_table()?;
+
+            for (i, elem) in a.into_iter().enumerate() {
+                table.set(i as i64 + 1, gsf_to_lua(lua, elem, map)?)?;
+            }
+
+            rlua::Value::Table(table)
+        }
+        gsf::Value::Bool(b) => rlua::Value::Boolean(b),
         gsf::Value::Int(x) => rlua::Value::Integer(x as i64),
+        gsf::Value::Float(f) => rlua::Value::Number(f),
         gsf::Value::Error => rlua::Value::Error(rlua::Error::ToLuaConversionError {
             from: "",
             to: "",
@@ -62,29 +76,11 @@ fn gsf_to_lua<'l>(
     Ok(res)
 }
 
-fn lua_to_gsf<F, R>(val: rlua::MultiValue, f: F) -> R
+fn lua_to_gsf_multi<F, R>(multi_val: rlua::MultiValue, f: F) -> rlua::Result<R>
 where
-    F: FnOnce(rlua::Result<gsf::Value>) -> R,
+    F: FnOnce(gsf::Value) -> rlua::Result<R>,
 {
-    let val = val.into_iter().next().unwrap();
-
-    match val {
-        // TODO: support signs
-        rlua::Value::Integer(i) => f(Ok(gsf::Value::Int(i as u64))),
-        rlua::Value::String(s) => f(s.to_str()
-            .map(ToOwned::to_owned)
-            .map(Into::into)
-            .map(gsf::Value::String)),
-        rlua::Value::Nil => f(Ok(gsf::Value::Tuple(Default::default()))),
-        rlua::Value::UserData(a) => {
-            let ud = a.borrow::<LuaUd>();
-            match ud {
-                Ok(ud) => f(Ok(gsf::Value::CustomRef(ud.0.as_ref()))),
-                Err(e) => f(Err(e)),
-            }
-        }
-        _ => unimplemented!("does not support {:?}", val),
-    }
+    util::convert_all(multi_val.into_inner(), move |v| f(gsf::Value::Tuple(v)))
 }
 
 fn to_methods<'l>(
@@ -98,9 +94,7 @@ fn to_methods<'l>(
         let fptr = method.exec;
         let map = map.clone();
         methods.add_function(&method.ident, move |lua, val: rlua::MultiValue| {
-            println!("val: {:?}", val);
-
-            lua_to_gsf(val, |args| gsf_to_lua(lua, fptr(args?), &map))
+            lua_func(fptr, lua, &map, val)
         });
     }
 
@@ -119,56 +113,10 @@ fn register_ty(lua: &rlua::Lua, ty: &gsf::Ty, map: &gsf::TyMap) -> rlua::Result<
     Ok(())
 }
 
-struct Nobody(i32);
-
-pub fn run() -> rlua::Result<()> {
-    let context = rlua::Lua::new();
-
-    let mut map = gsf::TyMapMut::default();
-    map.insert(
-        TypeId::of::<Nobody>(),
-        gsf::Ty {
-            functions: vec![
-                gsf::Function {
-                    exec: |_| gsf::Value::Custom(Box::new(Nobody(4))),
-                    ident: "new".into(),
-                },
-            ],
-            id: TypeId::of::<Nobody>(),
-            ident: "Nobody".into(),
-            methods: vec![
-                gsf::Function {
-                    ident: "saySomething".into(),
-                    exec: |val| {
-                        println!("val: {:?}", val);
-
-                        match val {
-                            gsf::Value::CustomRef(a) => match gsf::Any::downcast_ref(a) {
-                                Some(&Nobody(nr)) => gsf::Value::Int(nr as u64),
-                                None => {
-                                    eprintln!("Type id: {:?}, type name: {:?}",
-                                              a.type_id(),
-                                              a.type_name());
-
-                                    gsf::Value::Error
-                                },
-                            }
-                            _ => gsf::Value::Error,
-                        }
-                    },
-                },
-            ],
-            properties: vec![],
-        },
-    );
-    let map = Arc::new(map);
-
+pub fn register_with(context: &rlua::Lua, map: &gsf::TyMap) -> rlua::Result<()> {
     for ty in map.values() {
-        println!("Registering type with type id {:?}", ty.id);
-        register_ty(&context, ty, &map)?;
+        register_ty(context, ty, map)?;
     }
-
-    context.eval::<()>(r#"print(Nobody.new():saySomething())"#, None)?;
 
     Ok(())
 }

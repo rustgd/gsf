@@ -95,7 +95,7 @@ pub type TyMap = Arc<TyMapMut>;
 pub type TyMapMut = fnv::FnvHashMap<TypeId, Ty>;
 
 pub enum Value<'a> {
-    Tuple(VecDeque<Value<'a>>),
+    Tuple(Vec<Value<'a>>),
     Bool(bool),
     Int(u64),
     Float(f64),
