@@ -1,7 +1,7 @@
 use std::any::{Any as StdAny, TypeId};
 
 pub trait Any: StdAny {
-    fn type_id(&self) -> TypeId;
+    unsafe fn __type_id(&self) -> TypeId;
 
     fn type_name(&self) -> &str;
 }
@@ -11,7 +11,7 @@ impl<T> Any for T
         T: StdAny
 {
     #[inline]
-    fn type_id(&self) -> TypeId {
+    unsafe fn __type_id(&self) -> TypeId {
         TypeId::of::<T>()
     }
 
@@ -25,9 +25,14 @@ impl<T> Any for T
 
 impl Any {
     #[inline]
+    pub fn type_id(&self) -> TypeId {
+        unsafe { self.__type_id() }
+    }
+
+    #[inline]
     pub fn is<T: Any>(&self) -> bool {
         let t = TypeId::of::<T>();
-        let boxed = self.type_id();
+        let boxed = unsafe { self.__type_id() };
 
         t == boxed
     }

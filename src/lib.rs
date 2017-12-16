@@ -3,6 +3,7 @@
 extern crate fnv;
 
 pub use any::Any;
+pub use builder::{Builder, TyBuilder};
 
 use std::any::TypeId;
 use std::borrow::Cow;
@@ -10,6 +11,8 @@ use std::fmt;
 use std::sync::Arc;
 
 mod any;
+mod builder;
+mod conv;
 
 #[derive(Clone)]
 pub struct Function {
@@ -19,7 +22,7 @@ pub struct Function {
     pub ret: ValueTy,
 }
 
-pub type FunPtr = fn(Vec<Value>) -> Value<'static>;
+pub type FunPtr = Arc<Fn(Vec<Value>) -> Value<'static>>;
 
 pub type Map<T> = fnv::FnvHashMap<Str, T>;
 
