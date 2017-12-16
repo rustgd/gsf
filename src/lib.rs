@@ -66,8 +66,8 @@ impl Any {
 pub struct Function {
     pub exec: FunPtr,
     pub ident: Str,
-    //pub input: Value,
-    //pub output: Value,
+    pub args: Vec<ValueTy>,
+    pub ret: ValueTy,
 }
 
 pub type FunPtr = fn(Vec<Value>) -> Value<'static>;
@@ -77,6 +77,7 @@ pub type Map<T> = fnv::FnvHashMap<Str, T>;
 #[derive(Clone)]
 pub struct Property {
     pub ident: Str,
+    pub ty: ValueTy,
     pub get: Option<FunPtr>,
     pub set: Option<FunPtr>,
 }
@@ -107,6 +108,19 @@ pub enum Value<'a> {
     Array(Vec<Value<'a>>),
     String(Str),
     Error,
+}
+
+#[derive(Clone, Debug)]
+pub enum ValueTy {
+    Tuple(Vec<ValueTy>),
+    Bool,
+    Int,
+    Float,
+    Custom,
+    CustomRef,
+    CustomMut,
+    Array(Box<ValueTy>),
+    String,
 }
 
 impl<'a> fmt::Debug for Value<'a> {
