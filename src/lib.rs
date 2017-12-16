@@ -14,6 +14,18 @@ mod any;
 mod builder;
 mod conv;
 
+#[derive(Clone, Debug)]
+pub enum Error {
+    NotEnoughArgs {
+        expected: u16,
+        found: u16,
+    },
+    WrongType {
+        expected: ValueTy,
+        found: ValueTy,
+    }
+}
+
 #[derive(Clone)]
 pub struct Function {
     pub exec: FunPtr,
@@ -33,6 +45,8 @@ pub struct Property {
     pub get: Option<FunPtr>,
     pub set: Option<FunPtr>,
 }
+
+pub type Result<T> = ::std::result::Result<T, Error>;
 
 pub type Str = Cow<'static, str>;
 
@@ -59,20 +73,13 @@ pub enum Value<'a> {
     CustomMut(&'a mut Any),
     Array(Vec<Value<'a>>),
     String(Str),
-    Error,
+    Error(Error),
 }
 
-#[derive(Clone, Debug)]
-pub enum ValueTy {
-    Tuple(Vec<ValueTy>),
-    Bool,
-    Int,
-    Float,
-    Custom,
-    CustomRef,
-    CustomMut,
-    Array(Box<ValueTy>),
-    String,
+impl<'a> Value<'a> {
+    pub fn into_res(self) -> Result<Self> {
+        self.into()
+    }
 }
 
 impl<'a> fmt::Debug for Value<'a> {
@@ -88,7 +95,54 @@ impl<'a> fmt::Debug for Value<'a> {
             Value::CustomMut(_) => f.debug_tuple("CustomMut").finish(),
             Value::Array(ref c) => f.debug_tuple("Array").field(c).finish(),
             Value::String(ref c) => f.debug_tuple("String").field(c).finish(),
-            Value::Error => f.debug_tuple("Error").finish(),
+            Value::Error(ref e) => f.debug_tuple("Error").field(e).finish(),
+        }
+    }
+}
+
+impl<'a> From<Result<Value<'a>>> for Value<'a> {
+    fn from(res: Result<Value<'a>>) -> Self {
+        res.unwrap_or_else(|e| Value::Error(e))
+    }
+}
+
+impl<'a> Into<Result<Value<'a>>> for Value<'a> {
+    fn into(self) -> Result<Value<'a>> {
+        match self {
+            Value::Error(e) => Err(e),
+            val => Ok(val),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum ValueTy {
+    Unknown,
+    Tuple(Vec<ValueTy>),
+    Bool,
+    Int,
+    Float,
+    Custom,
+    CustomRef,
+    CustomMut,
+    Array(Box<ValueTy>),
+    String,
+}
+
+impl<'a, 'b> From<&'a Value<'b>> for ValueTy {
+    fn from(val: &Value) -> Self {
+        match *val {
+            Value::Nil => ValueTy::Unknown,
+            Value::Tuple(ref v) => ValueTy::Tuple(v.iter().map(From::from).collect()),
+            Value::Bool(_) => ValueTy::Bool,
+            Value::Int(_) => ValueTy::Int,
+            Value::Float(_) => ValueTy::Float,
+            Value::Custom(_) => ValueTy::Custom,
+            Value::CustomRef(_) => ValueTy::CustomRef,
+            Value::CustomMut(_) => ValueTy::CustomMut,
+            Value::Array(ref a) => a.iter().next().map(From::from).unwrap_or(ValueTy::Unknown),
+            Value::String(_) => ValueTy::String,
+            Value::Error(_) => ValueTy::Unknown,
         }
     }
 }
