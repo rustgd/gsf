@@ -4,7 +4,6 @@ extern crate fnv;
 
 use std::any::{Any as StdAny, TypeId};
 use std::borrow::Cow;
-use std::collections::VecDeque;
 use std::fmt;
 use std::sync::Arc;
 
@@ -71,7 +70,7 @@ pub struct Function {
     //pub output: Value,
 }
 
-pub type FunPtr = fn(Value) -> Value<'static>;
+pub type FunPtr = fn(Vec<Value>) -> Value<'static>;
 
 pub type Map<T> = fnv::FnvHashMap<Str, T>;
 

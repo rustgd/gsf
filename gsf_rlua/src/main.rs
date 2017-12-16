@@ -23,10 +23,10 @@ fn register(context: &rlua::Lua) -> rlua::Result<()> {
             methods: vec![
                 gsf::Function {
                     ident: "saySomething".into(),
-                    exec: |val| {
-                        let val = match val {
-                            gsf::Value::Tuple(mut v) => v.pop().unwrap(),
-                            _ => return gsf::Value::Error,
+                    exec: |mut val| {
+                        let val = match val.pop() {
+                            Some(val) => val,
+                            None => return gsf::Value::Error,
                         };
 
                         match val {
@@ -50,10 +50,10 @@ fn register(context: &rlua::Lua) -> rlua::Result<()> {
             properties: vec![
                 gsf::Property {
                     ident: "square".into(),
-                    get: Some(|val| {
-                        let val = match val {
-                            gsf::Value::Tuple(mut v) => v.pop().unwrap(),
-                            _ => return gsf::Value::Error,
+                    get: Some(|mut val| {
+                        let val = match val.pop() {
+                            Some(val) => val,
+                            None => return gsf::Value::Error,
                         };
 
                         match val {
@@ -88,8 +88,6 @@ fn run() -> rlua::Result<()> {
     register(&context)?;
 
     context.eval::<()>(r#"print(Nobody.new():getSquare())"#, None)?;
-
-    loop {}
 
     Ok(())
 }

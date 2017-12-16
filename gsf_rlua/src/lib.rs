@@ -21,7 +21,7 @@ impl<'a, 'lua> rlua::ToLua<'lua> for LuaFunc<'a> {
 }
 
 fn lua_func<'l>(
-    fptr: fn(gsf::Value) -> gsf::Value<'static>,
+    fptr: gsf::FunPtr,
     lua: &'l rlua::Lua,
     map: &gsf::TyMap,
     val: rlua::MultiValue<'l>,
@@ -77,9 +77,9 @@ fn gsf_to_lua<'l>(
 
 fn lua_to_gsf_multi<F, R>(multi_val: rlua::MultiValue, f: F) -> rlua::Result<R>
 where
-    F: FnOnce(gsf::Value) -> rlua::Result<R>,
+    F: FnOnce(Vec<gsf::Value>) -> rlua::Result<R>,
 {
-    util::convert_all(multi_val.into_inner(), move |v| f(gsf::Value::Tuple(v)))
+    util::convert_all(multi_val.into_inner(), f)
 }
 
 fn to_methods<'l>(
