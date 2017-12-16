@@ -65,19 +65,21 @@ impl Any {
 
 #[derive(Clone)]
 pub struct Function {
-    pub exec: fn(Value) -> Value<'static>,
+    pub exec: FunPtr,
     pub ident: Str,
     //pub input: Value,
     //pub output: Value,
 }
+
+pub type FunPtr = fn(Value) -> Value<'static>;
 
 pub type Map<T> = fnv::FnvHashMap<Str, T>;
 
 #[derive(Clone)]
 pub struct Property {
     pub ident: Str,
-    pub get: Option<Function>,
-    pub set: Option<Function>,
+    pub get: Option<FunPtr>,
+    pub set: Option<FunPtr>,
 }
 
 pub type Str = Cow<'static, str>;

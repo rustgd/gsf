@@ -24,8 +24,6 @@ fn register(context: &rlua::Lua) -> rlua::Result<()> {
                 gsf::Function {
                     ident: "saySomething".into(),
                     exec: |val| {
-                        println!("val: {:?}", val);
-
                         let val = match val {
                             gsf::Value::Tuple(mut v) => v.pop().unwrap(),
                             _ => return gsf::Value::Error,
@@ -49,7 +47,34 @@ fn register(context: &rlua::Lua) -> rlua::Result<()> {
                     },
                 },
             ],
-            properties: vec![],
+            properties: vec![
+                gsf::Property {
+                    ident: "square".into(),
+                    get: Some(|val| {
+                        let val = match val {
+                            gsf::Value::Tuple(mut v) => v.pop().unwrap(),
+                            _ => return gsf::Value::Error,
+                        };
+
+                        match val {
+                            gsf::Value::CustomRef(a) => match gsf::Any::downcast_ref(a) {
+                                Some(&Nobody(nr)) => gsf::Value::Int((nr * nr) as u64),
+                                None => {
+                                    eprintln!(
+                                        "Type id: {:?}, type name: {:?}",
+                                        a.type_id(),
+                                        a.type_name()
+                                    );
+
+                                    gsf::Value::Error
+                                }
+                            },
+                            _ => gsf::Value::Error,
+                        }
+                    }),
+                    set: None,
+                },
+            ],
         },
     );
     let map = Arc::new(map);
@@ -62,7 +87,9 @@ fn run() -> rlua::Result<()> {
     let context = rlua::Lua::new();
     register(&context)?;
 
-    context.eval::<()>(r#"print(Nobody.new():saySomething())"#, None)?;
+    context.eval::<()>(r#"print(Nobody.new():getSquare())"#, None)?;
+
+    loop {}
 
     Ok(())
 }

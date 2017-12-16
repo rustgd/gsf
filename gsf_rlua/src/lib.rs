@@ -1,5 +1,3 @@
-#![feature(core_instrinsics)]
-
 extern crate gsf;
 extern crate rlua;
 
@@ -48,9 +46,10 @@ fn gsf_to_lua<'l>(
             })?;
 
             let methods = &ty.methods;
+            let props = &ty.properties;
             rlua::Value::UserData(lua.create_userdata_with_methods(
                 LuaUd(b),
-                to_methods(lua, &methods, map),
+                to_methods(lua, &methods, &props, map),
             )?)
         }
         gsf::Value::Array(a) => {
@@ -86,6 +85,7 @@ where
 fn to_methods<'l>(
     _: &'l rlua::Lua,
     funcs: &[gsf::Function],
+    props: &[gsf::Property],
     map: &gsf::TyMap,
 ) -> rlua::UserDataMethods<'l, LuaUd> {
     let mut methods = rlua::UserDataMethods::default();
@@ -96,6 +96,29 @@ fn to_methods<'l>(
         methods.add_function(&method.ident, move |lua, val: rlua::MultiValue| {
             lua_func(fptr, lua, &map, val)
         });
+    }
+
+    for prop in props {
+        let mut chars = prop.ident.chars();
+        let s: String = chars
+            .next()
+            .map(move |c| c.to_uppercase().collect::<String>() + chars.as_str())
+            .unwrap_or_default();
+
+
+        if let Some(getter) = prop.get {
+            let map = map.clone();
+            methods.add_function(&format!("get{}", s), move |lua, val: rlua::MultiValue| {
+                lua_func(getter, lua,& map, val)
+            });
+        }
+
+        if let Some(setter) = prop.get {
+            let map = map.clone();
+            methods.add_function(&format!("set{}", s), move |lua, val: rlua::MultiValue| {
+                lua_func(setter, lua, &map, val)
+            });
+        }
     }
 
     methods
