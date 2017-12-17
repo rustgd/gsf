@@ -16,6 +16,7 @@ mod conv;
 
 #[derive(Clone, Debug)]
 pub enum Error {
+    MissingSelfArg,
     WrongArgsNumber {
         expected: u16,
         found: u16,

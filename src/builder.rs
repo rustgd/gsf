@@ -2,8 +2,8 @@ use std::any::TypeId;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-use conv::{FromMultiValue, IntoValue};
-use {Any, Function, Ty, TyMap, TyMapMut, Value};
+use conv::{FromMultiValue, FromValue, IntoValue, MultiVal};
+use {Any, Error, Function, Ty, TyMap, TyMapMut, Value};
 
 #[derive(Default)]
 pub struct Builder {
@@ -54,8 +54,62 @@ impl<'b, T: 'static> TyBuilder<'b, T> {
         self.ty.functions.push(Function {
             exec: Arc::new(fptr),
             ident: ident.into(),
-            args: F::ty(),
-            ret: V::ty(),
+            args: F::multi_ty(),
+            ret: V::in_ty(),
+        });
+
+        self
+    }
+
+    pub fn add_method<C, F, V>(mut self, ident: &'static str, f: C) -> Self
+        where
+            C: Fn(&T, F) -> V + 'static,
+            F: for<'a> FromMultiValue<'a>,
+            V: IntoValue,
+    {
+        let fptr = move |val: Vec<Value>| {
+            let mut deque: MultiVal = val.into();
+            let this = <&T as FromValue>::from(deque.pop_front().ok_or(Error::MissingSelfArg)?)?;
+
+            let args = F::from(deque)?;
+            let res = f(this, args);
+
+            V::into(res)
+        };
+        let fptr = move |val: Vec<Value>| fptr(val).into();
+        self.ty.methods.push(Function {
+            exec: Arc::new(fptr),
+            ident: ident.into(),
+            args: F::multi_ty(),
+            ret: V::in_ty(),
+        });
+
+        self
+    }
+
+    pub fn add_method_mut<C, F, V>(mut self, ident: &'static str, f: C) -> Self
+        where
+            C: Fn(&mut T, F) -> V + 'static,
+            F: for<'a> FromMultiValue<'a>,
+            V: IntoValue,
+    {
+        let fptr = move |val: Vec<Value>| {
+            let mut deque: MultiVal = val.into();
+            let this = <&mut T as FromValue>::from(
+                deque.pop_front().ok_or(Error::MissingSelfArg)?
+            )?;
+
+            let args = F::from(deque)?;
+            let res = f(this, args);
+
+            V::into(res)
+        };
+        let fptr = move |val: Vec<Value>| fptr(val).into();
+        self.ty.methods.push(Function {
+            exec: Arc::new(fptr),
+            ident: ident.into(),
+            args: F::multi_ty(),
+            ret: V::in_ty(),
         });
 
         self

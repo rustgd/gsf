@@ -7,8 +7,8 @@ pub trait Any: StdAny {
 }
 
 impl<T> Any for T
-    where
-        T: StdAny
+where
+    T: StdAny + ?Sized
 {
     #[inline]
     unsafe fn __type_id(&self) -> TypeId {
