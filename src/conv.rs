@@ -25,7 +25,7 @@ impl<'a> FromValue<'a> for u64 {
         match v.into_res()? {
             Value::Int(i) => Ok(i),
             other => Err(Error::WrongType {
-                expected: Self::ty(),
+                expected: ValueTy::Int,
                 found: other.ty(),
             }),
         }
@@ -83,6 +83,26 @@ pub trait IntoValue: Sized {
     fn ty() -> ValueTy;
 
     fn into(self) -> Result<Value<'static>>;
+}
+
+impl IntoValue for () {
+    fn ty() -> ValueTy {
+        ValueTy::Tuple(vec![])
+    }
+
+    fn into(self) -> Result<Value<'static>> {
+        Ok(Value::Tuple(vec![]))
+    }
+}
+
+impl IntoValue for u64 {
+    fn ty() -> ValueTy {
+        ValueTy::Int
+    }
+
+    fn into(self) -> Result<Value<'static>> {
+        Ok(Value::Int(self))
+    }
 }
 
 macro_rules! count_args {

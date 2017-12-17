@@ -11,17 +11,17 @@ struct LuaFunc<'a>(&'a gsf::Function, gsf::TyMap);
 
 impl<'a, 'lua> rlua::ToLua<'lua> for LuaFunc<'a> {
     fn to_lua(self, lua: &'lua rlua::Lua) -> rlua::Result<rlua::Value<'lua>> {
-        let func = self.0.exec;
+        let func = self.0.exec.clone();
         let map = self.1;
 
         Ok(rlua::Value::Function(lua.create_function(
-            move |lua, val: rlua::MultiValue| lua_func(func, lua, &map, val),
+            move |lua, val: rlua::MultiValue| lua_func(&func, lua, &map, val),
         ).unwrap()))
     }
 }
 
 fn lua_func<'l>(
-    fptr: gsf::FunPtr,
+    fptr: &gsf::FunPtr,
     lua: &'l rlua::Lua,
     map: &gsf::TyMap,
     val: rlua::MultiValue<'l>,
@@ -64,7 +64,7 @@ fn gsf_to_lua<'l>(
         gsf::Value::Bool(b) => rlua::Value::Boolean(b),
         gsf::Value::Int(x) => rlua::Value::Integer(x as i64),
         gsf::Value::Float(f) => rlua::Value::Number(f),
-        gsf::Value::Error => rlua::Value::Error(rlua::Error::ToLuaConversionError {
+        gsf::Value::Error(_) => rlua::Value::Error(rlua::Error::ToLuaConversionError {
             from: "",
             to: "",
             message: None,
@@ -91,10 +91,10 @@ fn to_methods<'l>(
     let mut methods = rlua::UserDataMethods::default();
 
     for method in funcs {
-        let fptr = method.exec;
+        let fptr = method.exec.clone();
         let map = map.clone();
         methods.add_function(&method.ident, move |lua, val: rlua::MultiValue| {
-            lua_func(fptr, lua, &map, val)
+            lua_func(&fptr, lua, &map, val)
         });
     }
 
@@ -105,18 +105,19 @@ fn to_methods<'l>(
             .map(move |c| c.to_uppercase().collect::<String>() + chars.as_str())
             .unwrap_or_default();
 
-
-        if let Some(getter) = prop.get {
+        if let Some(ref getter) = prop.get {
+            let getter = getter.clone();
             let map = map.clone();
             methods.add_function(&format!("get{}", s), move |lua, val: rlua::MultiValue| {
-                lua_func(getter, lua,& map, val)
+                lua_func(&getter, lua, &map, val)
             });
         }
 
-        if let Some(setter) = prop.get {
+        if let Some(ref setter) = prop.set {
+            let setter = setter.clone();
             let map = map.clone();
             methods.add_function(&format!("set{}", s), move |lua, val: rlua::MultiValue| {
-                lua_func(setter, lua, &map, val)
+                lua_func(&setter, lua, &map, val)
             });
         }
     }

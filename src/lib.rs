@@ -2,7 +2,7 @@
 
 extern crate fnv;
 
-pub use any::{Any, type_name_of};
+pub use any::{type_name_of, Any};
 pub use builder::{Builder, TyBuilder};
 
 use std::any::TypeId;
@@ -38,7 +38,7 @@ pub struct Function {
     pub ret: ValueTy,
 }
 
-pub type FunPtr = Arc<Fn(Vec<Value>) -> Result<Value<'static>>>;
+pub type FunPtr = Arc<Fn(Vec<Value>) -> Value<'static>>;
 
 pub type Map<T> = fnv::FnvHashMap<Str, T>;
 
