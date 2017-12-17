@@ -35,11 +35,11 @@ impl<'b, T> TyBuilder<'b, T> {
     pub fn add_function<C, F, V>(mut self, ident: &'static str, f: C) -> Self
     where
         C: Fn(F) -> V + 'static,
-        F: FromMultiValue,
+        F: for<'a> FromMultiValue<'a>,
         V: IntoValue,
     {
         let fptr = move |val: Vec<Value>| {
-            let args = F::from(val.into());
+            let args = F::from(val.into())?;
             let res = f(args);
 
             V::into(res)

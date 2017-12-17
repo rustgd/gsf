@@ -2,7 +2,7 @@
 
 extern crate fnv;
 
-pub use any::Any;
+pub use any::{Any, type_name_of};
 pub use builder::{Builder, TyBuilder};
 
 use std::any::TypeId;
@@ -16,14 +16,18 @@ mod conv;
 
 #[derive(Clone, Debug)]
 pub enum Error {
-    NotEnoughArgs {
+    WrongArgsNumber {
         expected: u16,
         found: u16,
     },
     WrongType {
         expected: ValueTy,
         found: ValueTy,
-    }
+    },
+    WrongAny {
+        expected: &'static str,
+        found: &'static str,
+    },
 }
 
 #[derive(Clone)]
@@ -34,7 +38,7 @@ pub struct Function {
     pub ret: ValueTy,
 }
 
-pub type FunPtr = Arc<Fn(Vec<Value>) -> Value<'static>>;
+pub type FunPtr = Arc<Fn(Vec<Value>) -> Result<Value<'static>>>;
 
 pub type Map<T> = fnv::FnvHashMap<Str, T>;
 
@@ -79,6 +83,10 @@ pub enum Value<'a> {
 impl<'a> Value<'a> {
     pub fn into_res(self) -> Result<Self> {
         self.into()
+    }
+
+    pub fn ty(&self) -> ValueTy {
+        ValueTy::from(self)
     }
 }
 

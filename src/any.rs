@@ -3,7 +3,7 @@ use std::any::{Any as StdAny, TypeId};
 pub trait Any: StdAny {
     unsafe fn __type_id(&self) -> TypeId;
 
-    fn type_name(&self) -> &str;
+    fn type_name(&self) -> &'static str;
 }
 
 impl<T> Any for T
@@ -16,7 +16,7 @@ impl<T> Any for T
     }
 
     #[inline]
-    fn type_name(&self) -> &str {
+    fn type_name(&self) -> &'static str {
         use std::intrinsics::type_name;
 
         unsafe { type_name::<T>() }
@@ -58,4 +58,11 @@ impl Any {
             None
         }
     }
+}
+
+#[inline]
+pub fn type_name_of<T>() -> &'static str {
+    use std::intrinsics::type_name;
+
+    unsafe { type_name::<T>() }
 }

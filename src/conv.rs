@@ -1,39 +1,117 @@
 use std::collections::VecDeque;
 
-use {Value, ValueTy};
+use {Any, Error, Result, Value, ValueTy, type_name_of};
 
 pub type MultiVal<'a> = VecDeque<Value<'a>>;
 
-pub trait FromMultiValue {
+pub trait FromMultiValue<'a>: Sized {
     fn ty() -> Vec<ValueTy>;
 
-    fn from(v: MultiVal) -> Self;
+    fn from(v: MultiVal<'a>) -> Result<Self>;
 }
 
-pub trait FromValue {
+pub trait FromValue<'a>: Sized {
     fn ty() -> ValueTy;
 
-    fn from(v: Value) -> Self;
+    fn from(v: Value<'a>) -> Result<Self>;
 }
 
-pub trait IntoValue {
+impl<'a> FromValue<'a> for u64 {
+    fn ty() -> ValueTy {
+        ValueTy::Int
+    }
+
+    fn from(v: Value<'a>) -> Result<Self> {
+        match v.into_res()? {
+            Value::Int(i) => Ok(i),
+            other => Err(Error::WrongType {
+                expected: Self::ty(),
+                found: other.ty(),
+            }),
+        }
+    }
+}
+
+impl<'a, T> FromValue<'a> for &'a T
+where
+    T: Any,
+{
+    fn ty() -> ValueTy {
+        ValueTy::CustomRef
+    }
+
+    fn from(v: Value<'a>) -> Result<Self> {
+        match v.into_res()? {
+            Value::CustomRef(r) => r.downcast_ref().ok_or_else(|| Error::WrongAny {
+                expected: type_name_of::<T>(),
+                found: r.type_name(),
+            }),
+            other => Err(Error::WrongType {
+                expected: Self::ty(),
+                found: other.ty(),
+            }),
+        }
+    }
+}
+
+impl<'a, T> FromValue<'a> for &'a mut T
+    where
+        T: Any,
+{
+    fn ty() -> ValueTy {
+        ValueTy::CustomRef
+    }
+
+    fn from(v: Value<'a>) -> Result<Self> {
+        match v.into_res()? {
+            Value::CustomMut(r) => {
+                let ty_name = (&*r).type_name();
+                r.downcast_mut().ok_or(Error::WrongAny {
+                    expected: type_name_of::<T>(),
+                    found: ty_name.into(),
+                })
+            },
+            other => Err(Error::WrongType {
+                expected: Self::ty(),
+                found: other.ty(),
+            }),
+        }
+    }
+}
+
+pub trait IntoValue: Sized {
     fn ty() -> ValueTy;
 
-    fn into(self) -> Value<'static>;
+    fn into(self) -> Result<Value<'static>>;
+}
+
+macro_rules! count_args {
+    () => {0u16};
+    ($head:ident $($tail:ident)*) => {1u16 + count_args!($($tail)*)};
 }
 
 macro_rules! def_from_multi {
     ($($params:ident),*) => {
-        impl< $($params),* > FromMultiValue for ( $($params ,)* )
+        impl< 'a, $($params),* > FromMultiValue<'a> for ( $($params ,)* )
         where
-            $($params : FromValue),*
+            $( $params : FromValue<'a>),*
         {
             fn ty() -> Vec<ValueTy> {
-                vec![ $( <$params as FromValue>::ty() ),* ]
+                vec![ $( <$params as FromValue<'a>>::ty() ),* ]
             }
 
-            fn from(mut _v: MultiVal) -> Self {
-                ( $( <$params as FromValue>::from(_v.pop_front().unwrap()) ,)* )
+            #[allow(unused_mut)]
+            fn from(mut v: MultiVal<'a>) -> Result<Self> {
+                let len = v.len() as u16;
+                let expected = count_args!($($params)*);
+                if len != expected {
+                    return Err(Error::WrongArgsNumber {
+                        expected,
+                        found: len,
+                    });
+                }
+
+                Ok(( $( <$params as FromValue<'a>>::from(v.pop_front().unwrap())? ,)* ))
             }
         }
 
