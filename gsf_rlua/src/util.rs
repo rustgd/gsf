@@ -5,7 +5,7 @@ use rlua;
 
 use super::*;
 
-fn map<F, R>(val: rlua::Value, f: F) -> rlua::Result<R>
+fn map<F, R>(val: rlua::Value, ty: gsf::ValueTy, f: F) -> rlua::Result<R>
 where
     F: FnOnce(gsf::Value) -> rlua::Result<R>,
 {
@@ -19,25 +19,37 @@ where
             .map(Into::into)
             .map(gsf::Value::String)?),
         rlua::Value::Nil => f(gsf::Value::Nil),
-        rlua::Value::UserData(a) => {
-            let ud = a.borrow::<LuaUd>()?;
+        rlua::Value::UserData(a) => match ty {
+            gsf::ValueTy::CustomRef => {
+                let ud = a.borrow::<LuaUd>()?;
 
-            f(gsf::Value::CustomRef(ud.0.as_ref()))
-        }
+                f(gsf::Value::CustomRef(ud.0.as_ref()))
+            }
+            gsf::ValueTy::CustomMut => {
+                let mut ud = a.borrow_mut::<LuaUd>()?;
+
+                f(gsf::Value::CustomMut(ud.0.as_mut()))
+            }
+            _ => Err(rlua::Error::FromLuaConversionError {
+                from: "UserData",
+                to: "Non UserData",
+                message: Some("Script passed user data, but no user data was expected".to_owned()),
+            }),
+        },
         _ => unimplemented!("does not support {:?}", val),
     }
 }
 
-pub fn convert_all<F, R>(v: VecDeque<rlua::Value>, f: F) -> rlua::Result<R>
+pub fn convert_all<F, R>(v: VecDeque<(rlua::Value, gsf::ValueTy)>, f: F) -> rlua::Result<R>
 where
     F: FnOnce(Vec<gsf::Value>) -> rlua::Result<R>,
 {
     let len = v.len();
-    convert_all_internal(v.into(), Vec::with_capacity(len), f)
+    convert_all_internal(v, Vec::with_capacity(len), f)
 }
 
 fn convert_all_internal<F, R>(
-    v: VecDeque<rlua::Value>,
+    v: VecDeque<(rlua::Value, gsf::ValueTy)>,
     built: Vec<gsf::Value>,
     f: F,
 ) -> rlua::Result<R>
@@ -46,7 +58,7 @@ where
 {
     match split(v) {
         None => f(built),
-        Some((head, tail)) => map(head, move |val| {
+        Some((head, tail)) => map(head.0, head.1, move |val| {
             convert_all_internal(tail, combine(built, val), f)
         }),
     }

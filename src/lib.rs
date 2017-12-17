@@ -3,7 +3,7 @@
 extern crate fnv;
 
 pub use any::{type_name_of, Any};
-pub use builder::{Builder, TyBuilder};
+pub use builder::{Builder, PropertyBuilder, TyBuilder};
 
 use std::any::TypeId;
 use std::borrow::Cow;
