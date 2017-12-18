@@ -93,7 +93,11 @@ where
     F: FnOnce(Vec<gsf::Value>) -> rlua::Result<R>,
 {
     util::convert_all(
-        multi_val.into_inner().into_iter().zip(tys.iter().cloned()).collect(),
+        multi_val
+            .into_inner()
+            .into_iter()
+            .zip(tys.iter().cloned())
+            .collect(),
         f,
     )
 }
@@ -135,7 +139,13 @@ fn to_methods<'l>(
             let map = map.clone();
             let rt = prop.ty.clone();
             methods.add_function(&format!("set{}", s), move |lua, val: rlua::MultiValue| {
-                lua_func(&setter, lua, &map, val, &[gsf::ValueTy::CustomMut, rt.clone()])
+                lua_func(
+                    &setter,
+                    lua,
+                    &map,
+                    val,
+                    &[gsf::ValueTy::CustomMut, rt.clone()],
+                )
             });
         }
     }
