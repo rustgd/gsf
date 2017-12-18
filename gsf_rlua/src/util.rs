@@ -68,6 +68,7 @@ where
             Value::Nil => f(gsf::Value::Nil),
             other => map(other, *o, f),
         },
+        ValueTy::Void => unimplemented!(),
         ValueTy::Custom => unimplemented!(),
         ValueTy::Array(_) => unimplemented!(),
         ValueTy::Tuple(_) => unimplemented!(),

@@ -234,7 +234,7 @@ where
 
             Ok(())
         };
-        let fptr = move |val: Vec<Value>| fptr(val).map(|_| Value::Nil).into();
+        let fptr = move |val: Vec<Value>| fptr(val).map(|_| Value::Void).into();
 
         self.property.set = Some(Arc::new(fptr));
     }

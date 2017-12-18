@@ -69,6 +69,7 @@ pub type TyMapMut = fnv::FnvHashMap<TypeId, Ty>;
 
 pub enum Value<'a> {
     Nil,
+    Void,
     Tuple(Vec<Value<'a>>),
     Bool(bool),
     Int(u64),
@@ -94,6 +95,7 @@ impl<'a> Value<'a> {
 impl<'a> fmt::Debug for Value<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
+            Value::Void => f.debug_tuple("Void").finish(),
             Value::Nil => f.debug_tuple("Nil").finish(),
             Value::Tuple(ref v) => f.debug_tuple("Tuple").field(v).finish(),
             Value::Bool(ref b) => f.debug_tuple("Bool").field(b).finish(),
@@ -127,7 +129,8 @@ impl<'a> Into<Result<Value<'a>>> for Value<'a> {
 #[derive(Clone, Debug)]
 pub enum ValueTy {
     Unknown,
-    Tuple(Vec<ValueTy>),
+    Void,
+    Tuple(Vec<ValueTy>), // TODO: remove
     Bool,
     Int,
     Float,
@@ -143,6 +146,7 @@ impl<'a, 'b> From<&'a Value<'b>> for ValueTy {
     fn from(val: &Value) -> Self {
         match *val {
             Value::Nil => ValueTy::Unknown,
+            Value::Void => ValueTy::Void,
             Value::Tuple(ref v) => ValueTy::Tuple(v.iter().map(From::from).collect()),
             Value::Bool(_) => ValueTy::Bool,
             Value::Int(_) => ValueTy::Int,

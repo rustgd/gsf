@@ -48,6 +48,7 @@ fn gsf_to_lua<'l>(
 ) -> rlua::Result<rlua::Value<'l>> {
     let res = match val {
         gsf::Value::String(s) => rlua::Value::String(lua.create_string(&s)?),
+        gsf::Value::Void => rlua::Value::Nil,
         gsf::Value::Nil => rlua::Value::Nil,
         gsf::Value::Custom(b) => {
             let id = gsf::Any::type_id(b.as_ref());
