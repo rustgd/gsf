@@ -134,6 +134,7 @@ pub enum ValueTy {
     Custom,
     CustomRef,
     CustomMut,
+    Option(Box<ValueTy>),
     Array(Box<ValueTy>),
     String,
 }

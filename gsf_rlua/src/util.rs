@@ -1,15 +1,38 @@
 use std::collections::VecDeque;
 
-use gsf;
-use rlua;
+use gsf::{self, ValueTy};
+use rlua::{self, Value};
 
 use super::*;
 
-fn map<F, R>(val: rlua::Value, ty: gsf::ValueTy, f: F) -> rlua::Result<R>
+fn map<F, R>(val: rlua::Value, ty: ValueTy, f: F) -> rlua::Result<R>
 where
     F: FnOnce(gsf::Value) -> rlua::Result<R>,
 {
-    match val {
+    match ty {
+        ValueTy::Bool => match val {
+            Value::Boolean(b) => f(gsf::Value::Bool(b)),
+            other => Err(rlua::Error::FromLuaConversionError {
+                from: "TODO: use Value::type_name()",
+                to: "boolean",
+                message: Some(format!("Expected boolean, got {}", other.to_string())),
+            })
+        },
+        ValueTy::Int => {},
+        ValueTy::Float => {},
+        ValueTy::Custom => {},
+        ValueTy::CustomRef => {},
+        ValueTy::CustomMut => {},
+        ValueTy::String => {},
+        ValueTy::Option(o) => match val {
+            Value::Nil => f(gsf::Value::Nil),
+            other => map(other, o, f),
+        },
+        ValueTy::Array(_) => unimplemented!(),
+        ValueTy::Tuple(_) => unimplemented!(),
+        ValueTy::Unknown => unimplemented!(),
+    }
+    /*match val {
         // TODO: support signs
         rlua::Value::Integer(i) => f(gsf::Value::Int(i as u64)),
         rlua::Value::Number(nr) => f(gsf::Value::Float(nr)),
@@ -37,7 +60,7 @@ where
             }),
         },
         _ => unimplemented!("does not support {:?}", val),
-    }
+    }*/
 }
 
 pub fn convert_all<F, R>(v: VecDeque<(rlua::Value, gsf::ValueTy)>, f: F) -> rlua::Result<R>
