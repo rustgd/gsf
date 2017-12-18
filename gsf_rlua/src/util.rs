@@ -18,19 +18,83 @@ where
                 message: Some(format!("Expected boolean, got {:?}", other)),
             }),
         },
-        ValueTy::Int => match val {
-            Value::Integer(i) => f(gsf::Value::Int(i as u64)),
+        ValueTy::Int8 => match val {
+            Value::Integer(i) => f(gsf::Value::Int8(i as i8)),
             other => Err(rlua::Error::FromLuaConversionError {
                 from: "value (TODO: use Value::type_name())",
-                to: "integer",
+                to: "integer 8-bit",
                 message: Some(format!("Expected integer, got {:?}", other)),
             }),
         },
-        ValueTy::Float => match val {
-            Value::Number(nr) => f(gsf::Value::Float(nr)),
+        ValueTy::Int16 => match val {
+            Value::Integer(i) => f(gsf::Value::Int16(i as i16)),
             other => Err(rlua::Error::FromLuaConversionError {
                 from: "value (TODO: use Value::type_name())",
-                to: "float",
+                to: "integer 16-bit",
+                message: Some(format!("Expected integer, got {:?}", other)),
+            }),
+        },
+        ValueTy::Int32 => match val {
+            Value::Integer(i) => f(gsf::Value::Int32(i as i32)),
+            other => Err(rlua::Error::FromLuaConversionError {
+                from: "value (TODO: use Value::type_name())",
+                to: "integer 32-bit",
+                message: Some(format!("Expected integer, got {:?}", other)),
+            }),
+        },
+        ValueTy::Int64 => match val {
+            Value::Integer(i) => f(gsf::Value::Int64(i as i64)),
+            other => Err(rlua::Error::FromLuaConversionError {
+                from: "value (TODO: use Value::type_name())",
+                to: "integer 64-bit",
+                message: Some(format!("Expected integer, got {:?}", other)),
+            }),
+        },
+        ValueTy::Uint8 => match val {
+            Value::Integer(i) => f(gsf::Value::Uint8(i as u8)),
+            other => Err(rlua::Error::FromLuaConversionError {
+                from: "value (TODO: use Value::type_name())",
+                to: "unsigned integer 8-bit",
+                message: Some(format!("Expected integer, got {:?}", other)),
+            }),
+        },
+        ValueTy::Uint16 => match val {
+            Value::Integer(i) => f(gsf::Value::Uint16(i as u16)),
+            other => Err(rlua::Error::FromLuaConversionError {
+                from: "value (TODO: use Value::type_name())",
+                to: "unsigned integer 16-bit",
+                message: Some(format!("Expected integer, got {:?}", other)),
+            }),
+        },
+        ValueTy::Uint32 => match val {
+            Value::Integer(i) => f(gsf::Value::Uint32(i as u32)),
+            other => Err(rlua::Error::FromLuaConversionError {
+                from: "value (TODO: use Value::type_name())",
+                to: "unsigned integer 32-bit",
+                message: Some(format!("Expected integer, got {:?}", other)),
+            }),
+        },
+        ValueTy::Uint64 => match val {
+            Value::Integer(i) => f(gsf::Value::Uint64(i as u64)),
+            other => Err(rlua::Error::FromLuaConversionError {
+                from: "value (TODO: use Value::type_name())",
+                to: "unsigned integer 64-bit",
+                message: Some(format!("Expected integer, got {:?}", other)),
+            }),
+        },
+        ValueTy::Float32 => match val {
+            Value::Number(nr) => f(gsf::Value::Float32(nr as f32)),
+            other => Err(rlua::Error::FromLuaConversionError {
+                from: "value (TODO: use Value::type_name())",
+                to: "float 32-bit",
+                message: Some(format!("Expected float, got {:?}", other)),
+            }),
+        },
+        ValueTy::Float64 => match val {
+            Value::Number(nr) => f(gsf::Value::Float64(nr as f64)),
+            other => Err(rlua::Error::FromLuaConversionError {
+                from: "value (TODO: use Value::type_name())",
+                to: "float 64-bit",
                 message: Some(format!("Expected float, got {:?}", other)),
             }),
         },

@@ -42,8 +42,16 @@ impl<'a> FromValue<'a> for $fty {
     };
 }
 
-def_from_val!(u64, Int);
-def_from_val!(f64, Float);
+def_from_val!(i8, Int8);
+def_from_val!(i16, Int16);
+def_from_val!(i32, Int32);
+def_from_val!(i64, Int64);
+def_from_val!(u8, Uint8);
+def_from_val!(u16, Uint16);
+def_from_val!(u32, Uint32);
+def_from_val!(u64, Uint64);
+def_from_val!(f32, Float32);
+def_from_val!(f64, Float64);
 def_from_val!(bool, Bool);
 def_from_val!(String, String, String, |s: Str| Ok(s.into_owned()));
 
@@ -116,25 +124,32 @@ pub trait IntoValue: Sized {
     fn into(self) -> Result<Value<'static>>;
 }
 
-impl IntoValue for () {
-    fn in_ty() -> ValueTy {
-        ValueTy::Tuple(vec![])
-    }
+macro_rules! def_into {
+    ($fty:ty, $tyv:ident) => {
+        def_into!($fty, $tyv, |this| Ok(Value::$tyv(this)));
+    };
+    ($fty:ty, $tyv:ident, $e:expr) => {
+        impl IntoValue for $fty {
+            fn in_ty() -> ValueTy {
+                ValueTy::$tyv
+            }
 
-    fn into(self) -> Result<Value<'static>> {
-        Ok(Value::Tuple(vec![]))
-    }
+            fn into(self) -> Result<Value<'static>> {
+                ($e)(self)
+            }
+        }
+    };
 }
 
-impl IntoValue for u64 {
-    fn in_ty() -> ValueTy {
-        ValueTy::Int
-    }
-
-    fn into(self) -> Result<Value<'static>> {
-        Ok(Value::Int(self))
-    }
-}
+def_into!((), Void, |_| Ok(Value::Void));
+def_into!(i8, Int8);
+def_into!(i16, Int16);
+def_into!(i32, Int32);
+def_into!(i64, Int64);
+def_into!(u8, Uint8);
+def_into!(u16, Uint16);
+def_into!(u32, Uint32);
+def_into!(u64, Uint64);
 
 impl<T> IntoValue for Box<T>
 where

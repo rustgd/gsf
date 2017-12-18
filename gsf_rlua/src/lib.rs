@@ -75,8 +75,16 @@ fn gsf_to_lua<'l>(
             rlua::Value::Table(table)
         }
         gsf::Value::Bool(b) => rlua::Value::Boolean(b),
-        gsf::Value::Int(x) => rlua::Value::Integer(x as i64),
-        gsf::Value::Float(f) => rlua::Value::Number(f),
+        gsf::Value::Int8(x) => rlua::Value::Integer(x as i64),
+        gsf::Value::Int16(x) => rlua::Value::Integer(x as i64),
+        gsf::Value::Int32(x) => rlua::Value::Integer(x as i64),
+        gsf::Value::Int64(x) => rlua::Value::Integer(x as i64),
+        gsf::Value::Uint8(x) => rlua::Value::Integer(x as i64),
+        gsf::Value::Uint16(x) => rlua::Value::Integer(x as i64),
+        gsf::Value::Uint32(x) => rlua::Value::Integer(x as i64),
+        gsf::Value::Uint64(x) => rlua::Value::Integer(x as i64),
+        gsf::Value::Float32(f) => rlua::Value::Number(f as f64),
+        gsf::Value::Float64(f) => rlua::Value::Number(f as f64),
         gsf::Value::Error(e) => {
             eprintln!("Error: {:?}", e);
             rlua::Value::Error(rlua::Error::ToLuaConversionError {

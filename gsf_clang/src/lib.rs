@@ -15,7 +15,7 @@ fn to_c_ty(ty: &gsf::ValueTy) -> &'static str {
 fn to_rust_ty(ty: &gsf::ValueTy) -> &'static str {
     match *ty {
         ValueTy::Void => "()",
-        ValueTy::Int => "::std::os::raw::c_int",
+        ValueTy::Uint64 => "::std::os::raw::c_int",
         _ => unimplemented!(),
     }
 }
@@ -73,7 +73,7 @@ mod tests {
             gsf::Function {
                 exec: Arc::new(|_| gsf::Value::Nil),
                 ident: "foo".into(),
-                args: vec![ValueTy::Int, ValueTy::Int],
+                args: vec![ValueTy::Uint64, ValueTy::Uint64],
                 ret: ValueTy::Void,
             },
             &mut v,

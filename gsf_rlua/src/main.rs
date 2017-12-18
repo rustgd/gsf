@@ -8,13 +8,13 @@ fn register(context: &rlua::Lua) -> rlua::Result<()> {
     let map = gsf::Builder::default()
         .with_ty(
             gsf::TyBuilder::<Foo>::new("Foo")
-                .with_function("new", |(nr,): (u64,)| Box::new(Foo(nr as i32)))
-                .with_function("sum_up", |(a, b): (u64, u64)| a + b)
-                .with_method("foo_sq", |foo, ()| (foo.0 * foo.0) as u64)
+                .with_function("new", |(nr,): (i32,)| Box::new(Foo(nr as i32)))
+                .with_function("sum_up", |(a, b): (i32, i32)| a + b)
+                .with_method("foo_sq", |foo, ()| foo.0 * foo.0)
                 .with_property(
                     gsf::PropertyBuilder::new("value")
-                        .with_getter(|this: &Foo| this.0 as u64)
-                        .with_setter(|this: &mut Foo, val: u64| this.0 = val as i32),
+                        .with_getter(|this: &Foo| this.0)
+                        .with_setter(|this: &mut Foo, val: i32| this.0 = val),
                 ),
         )
         .finish();
