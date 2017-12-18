@@ -32,7 +32,13 @@ fn lua_func<'l>(
     val: rlua::MultiValue<'l>,
     tys: &[gsf::ValueTy],
 ) -> rlua::Result<rlua::Value<'l>> {
-    lua_to_gsf_multi(val, tys, |args| gsf_to_lua(lua, fptr(args), &map))
+    let res = lua_to_gsf_multi(val, tys, |args| gsf_to_lua(lua, fptr(args), &map));
+
+    if let Err(ref e) = res {
+        eprintln!("Returning error to lua: {}", e);
+    }
+
+    res
 }
 
 fn gsf_to_lua<'l>(

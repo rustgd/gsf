@@ -13,7 +13,7 @@ where
         ValueTy::Bool => match val {
             Value::Boolean(b) => f(gsf::Value::Bool(b)),
             other => Err(rlua::Error::FromLuaConversionError {
-                from: "TODO: use Value::type_name()",
+                from: "value (TODO: use Value::type_name())",
                 to: "boolean",
                 message: Some(format!("Expected boolean, got {:?}", other)),
             }),
@@ -21,7 +21,7 @@ where
         ValueTy::Int => match val {
             Value::Integer(i) => f(gsf::Value::Int(i as u64)),
             other => Err(rlua::Error::FromLuaConversionError {
-                from: "TODO: use Value::type_name()",
+                from: "value (TODO: use Value::type_name())",
                 to: "integer",
                 message: Some(format!("Expected integer, got {:?}", other)),
             }),
@@ -29,7 +29,7 @@ where
         ValueTy::Float => match val {
             Value::Number(nr) => f(gsf::Value::Float(nr)),
             other => Err(rlua::Error::FromLuaConversionError {
-                from: "TODO: use Value::type_name()",
+                from: "value (TODO: use Value::type_name())",
                 to: "float",
                 message: Some(format!("Expected float, got {:?}", other)),
             }),
@@ -40,7 +40,7 @@ where
                 f(gsf::Value::CustomRef(ud.0.as_ref()))
             }
             other => Err(rlua::Error::FromLuaConversionError {
-                from: "TODO: use Value::type_name()",
+                from: "value (TODO: use Value::type_name())",
                 to: "custom ref",
                 message: Some(format!("Expected custom ref, got {:?}", other)),
             }),
@@ -51,7 +51,7 @@ where
                 f(gsf::Value::CustomMut(ud.0.as_mut()))
             }
             other => Err(rlua::Error::FromLuaConversionError {
-                from: "TODO: use Value::type_name()",
+                from: "value (TODO: use Value::type_name())",
                 to: "custom mut",
                 message: Some(format!("Expected custom mut, got {:?}", other)),
             }),
@@ -59,7 +59,7 @@ where
         ValueTy::String => match val {
             Value::String(s) => f(gsf::Value::String(s.to_str()?.to_owned().into())),
             other => Err(rlua::Error::FromLuaConversionError {
-                from: "TODO: use Value::type_name()",
+                from: "value (TODO: use Value::type_name())",
                 to: "string",
                 message: Some(format!("Expected string, got {:?}", other)),
             }),
@@ -73,35 +73,6 @@ where
         ValueTy::Tuple(_) => unimplemented!(),
         ValueTy::Unknown => unimplemented!(),
     }
-    /*match val {
-        // TODO: support signs
-        rlua::Value::Integer(i) => f(gsf::Value::Int(i as u64)),
-        rlua::Value::Number(nr) => f(gsf::Value::Float(nr)),
-        rlua::Value::Boolean(b) => f(gsf::Value::Bool(b)),
-        rlua::Value::String(s) => f(s.to_str()
-            .map(ToOwned::to_owned)
-            .map(Into::into)
-            .map(gsf::Value::String)?),
-        rlua::Value::Nil => f(gsf::Value::Nil),
-        rlua::Value::UserData(a) => match ty {
-            gsf::ValueTy::CustomRef => {
-                let ud = a.borrow::<LuaUd>()?;
-
-                f(gsf::Value::CustomRef(ud.0.as_ref()))
-            }
-            gsf::ValueTy::CustomMut => {
-                let mut ud = a.borrow_mut::<LuaUd>()?;
-
-                f(gsf::Value::CustomMut(ud.0.as_mut()))
-            }
-            _ => Err(rlua::Error::FromLuaConversionError {
-                from: "UserData",
-                to: "Non UserData",
-                message: Some("Script passed user data, but no user data was expected".to_owned()),
-            }),
-        },
-        _ => unimplemented!("does not support {:?}", val),
-    }*/
 }
 
 pub fn convert_all<F, R>(v: VecDeque<(rlua::Value, gsf::ValueTy)>, f: F) -> rlua::Result<R>
