@@ -90,7 +90,7 @@ where
     T: Any,
 {
     fn out_ty() -> ValueTy {
-        ValueTy::CustomRef
+        ValueTy::CustomMut
     }
 
     fn from(v: Value<'a>) -> Result<Self> {

@@ -158,10 +158,8 @@ where
         self
     }
 
-    pub fn add_property<P>(&mut self, builder: PropertyBuilder<T, P>) -> Self {
+    pub fn add_property<P>(&mut self, builder: PropertyBuilder<T, P>) {
         self.ty.properties.push(builder.property);
-
-        self
     }
 
     pub fn with_property<P>(mut self, builder: PropertyBuilder<T, P>) -> Self {
