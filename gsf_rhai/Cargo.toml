@@ -1,0 +1,8 @@
+[package]
+name = "gsf_rhai"
+version = "0.1.0"
+authors = ["torkleyy <torkleyy@gmail.com>"]
+
+[dependencies]
+gsf = { path = "../" }
+rhai = "0.8.1"

@@ -1,7 +1,8 @@
 Cargo.lock
 /target/
-/gsf_rlua/target/
 /gsf_clang/target/
+/gsf_rhai/target/
+/gsf_rlua/target/
 
 *.iml
 .idea/
