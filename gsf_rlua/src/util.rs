@@ -5,6 +5,27 @@ use rlua::{self, Value};
 
 use super::*;
 
+pub fn to_lua_err(err: gsf::Error) -> rlua::Error {
+    match err {
+        gsf::Error::MissingSelfArg => rlua::Error::FromLuaConversionError {
+            from: "missing argument",
+            to: "self",
+            message: None,
+        },
+        gsf::Error::WrongArgsNumber { expected, found } => rlua::Error::FromLuaConversionError {
+            from: "missing argument",
+            to: "expected arguments",
+            message: Some(format!("Expected {} arguments, got {}", expected, found)),
+        },
+        gsf::Error::WrongType { expected, found } => rlua::Error::FromLuaConversionError {
+            from: "lua value",
+            to: "Rust value",
+            message: Some(format!("Expected {:?}, got {:?}", expected, found)),
+        },
+        gsf::Error::WrongAny { .. } => unreachable!("This should never happen"),
+    }
+}
+
 fn map<F, R>(val: rlua::Value, ty: ValueTy, f: F) -> rlua::Result<R>
 where
     F: FnOnce(gsf::Value) -> rlua::Result<R>,

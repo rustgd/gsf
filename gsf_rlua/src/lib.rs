@@ -1,6 +1,8 @@
 extern crate gsf;
 extern crate rlua;
 
+use std::sync::Arc;
+
 mod util;
 
 struct LuaUd(Box<gsf::Any>);
@@ -87,11 +89,8 @@ fn gsf_to_lua<'l>(
         gsf::Value::Float64(f) => rlua::Value::Number(f as f64),
         gsf::Value::Error(e) => {
             eprintln!("Error: {:?}", e);
-            rlua::Value::Error(rlua::Error::ToLuaConversionError {
-                from: "",
-                to: "",
-                message: None,
-            })
+            rlua::Value::Error(util::to_lua_err(e))
+            //rlua::Value::Error(rlua::Error::ExternalError(Arc::new(e)))
         }
         _ => unimplemented!(),
     };

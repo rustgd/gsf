@@ -4,9 +4,11 @@ extern crate fnv;
 
 pub use any::{type_name_of, Any};
 pub use builder::{Builder, PropertyBuilder, TyBuilder};
+pub use conv::{FromValue, FromMultiValue, IntoValue, MultiVal};
 
 use std::any::TypeId;
 use std::borrow::Cow;
+use std::error;
 use std::fmt;
 use std::sync::Arc;
 
@@ -29,6 +31,18 @@ pub enum Error {
         expected: &'static str,
         found: &'static str,
     },
+}
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        "gsf Error"
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[derive(Clone)]

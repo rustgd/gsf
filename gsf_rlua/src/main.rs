@@ -27,10 +27,15 @@ fn run() -> rlua::Result<()> {
     let context = rlua::Lua::new();
     register(&context)?;
 
-    context.eval::<()>(r#"print("sum:", Foo.sum_up(1, 9))"#, None)?;
-    context.eval::<()>(r#"print("sq:", Foo.new(8):foo_sq())"#, None)?;
-    context.eval::<()>(r#"print("value:", Foo.new(42):getValue())"#, None)?;
-    context.eval::<()>(r#"print("nil:", Foo.new(42):setValue(43))"#, None)?;
+    context.eval::<()>(r#"print(Foo.sum_up(1, 9))"#, Some("sum"))?;
+    context.eval::<()>(r#"
+Foo.sum_up(1) -- Does not work yet
+print(Foo.sum_up(1, 1))
+"#,
+                       Some("error"))?;
+    context.eval::<()>(r#"print(Foo.new(8):foo_sq())"#, Some("sq"))?;
+    context.eval::<()>(r#"print(Foo.new(42):getValue())"#, Some("get"))?;
+    context.eval::<()>(r#"print(Foo.new(42):setValue(43))"#, Some("set"))?;
 
     Ok(())
 }
